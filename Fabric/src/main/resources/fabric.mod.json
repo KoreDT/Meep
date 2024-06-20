@@ -1,0 +1,22 @@
+{
+	"schemaVersion": 1,
+	"id": "fabricmeep",
+	"version": "${version}",
+	"name": "FabricMeep",
+	"description": "",
+	"authors": [],
+	"contact": {},
+	"license": "All-Rights-Reserved",
+	"icon": "assets/fabricmeep/icon.png",
+	"environment": "server",
+	"entrypoints": {},
+	"accessWidener" : "fabricmeep.accesswidener",
+	"mixins": [
+		"fabricmeep.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=${loader_version}",
+		"fabric": "*",
+		"minecraft": "${minecraft_version}"
+	}
+}

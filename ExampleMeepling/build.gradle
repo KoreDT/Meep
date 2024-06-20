@@ -1,0 +1,15 @@
+plugins {
+    id 'java'
+}
+
+group = 'net.kore'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation "net.kore.meep:API:1.0-SNAPSHOT"
+}

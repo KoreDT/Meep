@@ -1,0 +1,70 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version "8.1.1"
+}
+
+group = 'net.kore.meep'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+
+    maven {
+        url "https://libraries.minecraft.net"
+    }
+}
+
+configurations {
+    shadow.extendsFrom implementation {
+        canBeResolved = true
+    }
+    provided.extendsFrom compileOnly {
+        canBeResolved = true
+    }
+}
+
+shadowJar {
+    archiveBaseName.set('Meep-API')
+    archiveClassifier.set('')
+    archiveVersion.set(version)
+    destinationDirectory.set(new File(rootDir, "output"))
+
+    configurations = [project.configurations.shadow]
+}
+
+dependencies {
+    provided shadow("net.kyori:adventure-api:4.17.0")
+    provided shadow("net.kyori:adventure-text-serializer-legacy:4.17.0")
+    provided shadow("net.kyori:adventure-text-serializer-gson:4.17.0")
+    provided shadow("net.kyori:adventure-text-serializer-plain:4.17.0")
+    provided shadow("net.kyori:adventure-text-minimessage:4.17.0")
+    provided shadow("org.apache.logging.log4j:log4j-api:2.23.1")
+    provided shadow("org.spongepowered:configurate-hocon:4.1.2")
+    provided shadow('com.mojang:brigadier:1.0.18')
+    shadow("org.graalvm.js:js:22.0.0")
+    shadow("org.graalvm.sdk:graal-sdk:22.0.0")
+    shadow("org.graalvm.truffle:truffle-api:22.0.0")
+    shadow('com.google.code.gson:gson:2.8.0')
+    shadow('com.google.guava:guava:33.2.0-jre')
+}
+
+publishing {
+    publications {
+        shadow(MavenPublication) { publication ->
+            project.shadow.component(publication)
+        }
+    }
+}
+
+publishing.publications.configureEach {
+    pom.withXml {
+        asNode().dependencies.'*'.findAll() {
+            it.scope.text() == 'runtime' && project.configurations.provided.allDependencies.find { dep ->
+                dep.name == it.artifactId.text()
+            }
+        }.each() {
+            it.scope*.value = 'provided'
+        }
+    }
+}

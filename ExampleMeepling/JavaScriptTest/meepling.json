@@ -1,0 +1,11 @@
+{
+	"name": "Example Meepling",
+	"description": "An example Meepling to test Meep's API",
+	"main": "meepling.js",
+	"version": "1.0-SNAPSHOT",
+	"type": "js",
+
+	"meep": {
+		"version": "1.0-SNAPSHOT"
+	}
+}

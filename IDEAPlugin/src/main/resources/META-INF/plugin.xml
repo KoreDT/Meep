@@ -1,0 +1,21 @@
+<idea-plugin>
+  <id>net.kore.meep.IDEAPlugin</id>
+
+  <name>IDEAPlugin</name>
+
+  <vendor email="limedev8756@gmail.com" url="https://novampr.is-a.dev">Nova</vendor>
+
+  <description><![CDATA[
+    Adds support for the Meep Minecraft platform, just marks a few methods as used
+  ]]></description>
+
+  <depends>com.intellij.modules.platform</depends>
+  <depends>com.intellij.modules.java</depends>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <lang.inspectionSuppressor
+            language="JAVA"
+            implementationClass="net.kore.meep.ideaplugin.listeners.AnnotationListener"
+    />
+  </extensions>
+</idea-plugin>

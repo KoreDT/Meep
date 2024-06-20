@@ -1,0 +1,33 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Meepling Schema",
+	"type": "object",
+	"properties": {
+		"name": {
+			"type": "string"
+		},
+		"description": {
+			"type": "string"
+		},
+		"main": {
+			"type": "string"
+		},
+		"version": {
+			"type": "string"
+		},
+		"meep": {
+			"type": "object",
+			"properties": {
+				"version": {
+					"type": "string"
+				}
+			},
+			"required": []
+		}
+	},
+	"required": [
+		"name",
+		"main",
+		"version"
+	]
+}

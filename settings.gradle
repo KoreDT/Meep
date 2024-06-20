@@ -1,0 +1,17 @@
+pluginManagement {
+    repositories {
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = 'Meep'
+
+include 'API'
+include 'Paper'
+include 'Fabric'
+include 'ExampleMeepling'
+include 'IDEAPlugin'

@@ -1,0 +1,5 @@
+name: MeepPaper
+version: '${version}'
+main: net.kore.meep.paper.MeepPaper
+api-version: '1.20'
+load: STARTUP
