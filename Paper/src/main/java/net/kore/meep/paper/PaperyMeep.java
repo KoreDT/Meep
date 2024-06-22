@@ -10,6 +10,7 @@ import net.kore.meep.api.Console;
 import net.kore.meep.api.Meep;
 import net.kore.meep.api.NamespaceKey;
 import net.kore.meep.api.WhitelistManager;
+import net.kore.meep.api.command.MeepCommandUtils;
 import net.kore.meep.api.entity.Player;
 import net.kore.meep.api.task.TaskSchedular;
 import net.kore.meep.api.world.World;
@@ -23,8 +24,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -35,6 +34,7 @@ public class PaperyMeep extends Meep {
     private final PaperConsole console = new PaperConsole();
     private final PaperTaskSchedular taskSchedular = new PaperTaskSchedular();
     private final PaperAsyncTaskSchedular asyncTaskSchedular = new PaperAsyncTaskSchedular();
+    private final PaperMeepCommandUtils commandUtils = new PaperMeepCommandUtils();
 
     @Override
     public void executeCrash(@Nullable Throwable t, String message) {
@@ -96,18 +96,6 @@ public class PaperyMeep extends Meep {
     }
 
     @Override
-    public List<NamespaceKey> getKnownEnchantKeys() {
-        List<NamespaceKey> enchants = new ArrayList<>();
-        BuiltInRegistries.ENCHANTMENT.forEach(e -> {
-            ResourceLocation rl = BuiltInRegistries.ENCHANTMENT.getKey(e);
-            if (rl != null) {
-                enchants.add(new NamespaceKey(rl.getNamespace(), rl.getPath(), NamespaceKey.KeyType.ENCHANT));
-            }
-        });
-        return enchants;
-    }
-
-    @Override
     public List<NamespaceKey> getKnownEntityKeys() {
         List<NamespaceKey> entities = new ArrayList<>();
         BuiltInRegistries.ENTITY_TYPE.forEach(e -> {
@@ -165,5 +153,10 @@ public class PaperyMeep extends Meep {
     @Override
     public TaskSchedular getAsyncSchedular() {
         return asyncTaskSchedular;
+    }
+
+    @Override
+    public MeepCommandUtils getCommandUtils() {
+        return commandUtils;
     }
 }

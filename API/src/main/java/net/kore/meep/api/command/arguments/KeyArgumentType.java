@@ -37,9 +37,6 @@ public class KeyArgumentType implements ArgumentType<NamespaceKey> {
     protected static KeyArgumentType entity() {
         return new KeyArgumentType(Collections.unmodifiableList(Meep.get().getKnownEntityKeys()));
     }
-    protected static KeyArgumentType enchant() {
-        return new KeyArgumentType(Collections.unmodifiableList(Meep.get().getKnownEnchantKeys()));
-    }
 
     @Override
     public NamespaceKey parse(StringReader reader) throws CommandSyntaxException {

@@ -6,6 +6,7 @@
 package net.kore.meep.api;
 
 import com.mojang.brigadier.Command;
+import net.kore.meep.api.command.MeepCommandUtils;
 import net.kore.meep.api.command.arguments.ArgumentProvider;
 import net.kore.meep.api.event.EventManager;
 import net.kore.meep.api.event.block.BlockBreakEvent;
@@ -294,12 +295,6 @@ public abstract class Meep {
     public abstract List<NamespaceKey> getKnownBlockKeys();
 
     /**
-     * Get all known enchant keys
-     * @return {@link List}<{@link NamespaceKey}>
-     */
-    public abstract List<NamespaceKey> getKnownEnchantKeys();
-
-    /**
      * Get all known entity keys
      * @return {@link List}<{@link NamespaceKey}>
      */
@@ -352,4 +347,10 @@ public abstract class Meep {
      * @return {@link TaskSchedular}
      */
     public abstract TaskSchedular getAsyncSchedular();
+
+    /**
+     * Get the command utils, these are platform specific
+     * @return {@link MeepCommandUtils}
+     */
+    public abstract MeepCommandUtils getCommandUtils();
 }

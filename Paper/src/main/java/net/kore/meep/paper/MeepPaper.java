@@ -6,7 +6,6 @@
 package net.kore.meep.paper;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.RedirectModifier;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.*;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -44,17 +43,13 @@ import net.kore.meep.paper.task.PaperAsyncTaskSchedular;
 import net.kore.meep.paper.task.PaperTaskSchedular;
 import net.kore.meep.paper.utils.BukkitToMeep;
 import net.kyori.adventure.text.Component;
-import net.minecraft.server.commands.ExecuteCommand;
-import net.minecraft.server.commands.TeleportCommand;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.block.CommandBlock;
 import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.ProxiedCommandSender;
 import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionAttachment;
@@ -70,7 +65,9 @@ import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("UnstableApiUsage")
 public final class MeepPaper extends JavaPlugin implements Listener {
-    private CommandDispatcher<CommandSender> DISPATCHER;
+    CommandDispatcher<CommandSender> DISPATCHER;
+
+    public static MeepPaper getPlugin() { return getPlugin(MeepPaper.class); }
 
     @Override
     public void onLoad() {
@@ -104,7 +101,7 @@ public final class MeepPaper extends JavaPlugin implements Listener {
             for (CommandNode<CommandSender> command : DISPATCHER.getRoot().getChildren()) {
                 if (command instanceof LiteralCommandNode<CommandSender> literalCommand) {
                     commands.register(
-                            ((LiteralCommandNode<CommandSourceStack>) translateNode(literalCommand)),
+                            ((LiteralCommandNode<CommandSourceStack>) translateNode(literalCommand, DISPATCHER.getRoot())),
                             null,
                             Collections.emptyList()
                     );
@@ -122,100 +119,105 @@ public final class MeepPaper extends JavaPlugin implements Listener {
         EventManager.get().fireEvent(event);
     }
 
-    public CommandNode<CommandSourceStack> translateNode(CommandNode<CommandSender> original) {
-        if (original instanceof LiteralCommandNode<CommandSender> literalCommandNode) {
-            LiteralArgumentBuilder<CommandSourceStack> literal = Commands.literal(literalCommandNode.getLiteral()).executes(commandContext -> {
-                CommandSender sender = getSender(commandContext.getSource());
-                if (sender == null) {
-                    throw new CommandSyntaxException(new CommandExceptionType() {}, () -> "Unsupported CommandSender type for Meep. Report this to the GitHub. Missing CommandSender type: "+commandContext.getSource().getSender().getClass().getSimpleName());
+    public CommandNode<CommandSourceStack> translateNode(CommandNode<CommandSender> original, RootCommandNode<CommandSender> root) {
+        switch (original) {
+            case LiteralCommandNode<CommandSender> literalCommandNode -> {
+                LiteralArgumentBuilder<CommandSourceStack> literal = Commands.literal(literalCommandNode.getLiteral()).executes(commandContext -> {
+                    CommandSender sender = getSender(commandContext.getSource());
+                    if (sender == null) {
+                        throw new CommandSyntaxException(new CommandExceptionType() {
+                        }, () -> "Unsupported CommandSender type for Meep. Report this to the GitHub. Missing CommandSender type: " + commandContext.getSource().getSender().getClass().getSimpleName());
+                    }
+                    return DISPATCHER.execute(commandContext.getInput(), sender);
+                });
+                for (CommandNode<CommandSender> command : literalCommandNode.getChildren()) {
+                    literal = literal.then(translateNode(command, root));
                 }
-                return DISPATCHER.execute(commandContext.getInput(), sender);
-            });
-            for (CommandNode<CommandSender> command : literalCommandNode.getChildren()) {
-                literal = literal.then(translateNode(command));
+                CommandNode<CommandSender> redirect = literalCommandNode.getRedirect();
+                boolean isForking = literalCommandNode.isFork();
+                if (redirect != null) {
+                    literal = literal.forward(translateNode(redirect, root), null, isForking); // Modifier can be null because we once again handle this on the other dispatcher
+                }
+                return literal.build();
             }
-            CommandNode<CommandSender> redirect = literalCommandNode.getRedirect();
-            boolean isForking = literalCommandNode.isFork();
-            if (redirect != null) {
-                literal = literal.forward(translateNode(redirect), null, isForking); // Modifier can be null because we once again handle this on the other dispatcher
-            }
-            return literal.build();
-        } else if (original instanceof ArgumentCommandNode<CommandSender ,?> argumentCommandNode) {
-            ArgumentType<?> argType;
-            if (argumentCommandNode.getType() instanceof IntegerArgumentType integerArgumentType) {
-                argType = integerArgumentType;
-            } else if (argumentCommandNode.getType() instanceof BoolArgumentType boolArgumentType) {
-                argType = boolArgumentType;
-            } else if (argumentCommandNode.getType() instanceof DoubleArgumentType doubleArgumentType) {
-                argType = doubleArgumentType;
-            } else if (argumentCommandNode.getType() instanceof FloatArgumentType floatArgumentType) {
-                argType = floatArgumentType;
-            } else if (argumentCommandNode.getType() instanceof LongArgumentType longArgumentType) {
-                argType = longArgumentType;
-            } else if (argumentCommandNode.getType() instanceof StringArgumentType stringArgumentType) {
-                argType = stringArgumentType;
-            } else {
-                argType = new CustomArgumentType<Object, String>() {
-                    @Override
-                    public @NotNull Object parse(@NotNull StringReader stringReader) {
-                        return new Object(); // This doesn't matter because we parse the command straight to Meep's dispatcher which will handle the parsing much better than paper could ever
-                    }
-
-                    @Override
-                    public @NotNull ArgumentType<String> getNativeType() {
-                        return StringArgumentType.word();
-                    }
-
-                    @Override
-                    public @NotNull <S> CompletableFuture<Suggestions> listSuggestions(@NotNull CommandContext<S> context, @NotNull SuggestionsBuilder builder) {
-                        if (context.getSource() instanceof CommandSourceStack stack) {
-                            try {
-                                Map<String, ParsedArgument<CommandSender, ?>> MEEP_ARGS = new HashMap<>();
-                                @SuppressWarnings("unchecked")
-                                Map<String, ParsedArgument<CommandSourceStack, ?>> ARGS = (Map<String, ParsedArgument<CommandSourceStack, ?>>) context.getClass().getDeclaredField("arguments").get(context);
-                                ARGS.forEach((str, parsedArg) -> {
-                                    ParsedArgument<CommandSender, ?> pa = new ParsedArgument<>(parsedArg.getRange().getStart(), parsedArg.getRange().getEnd(), parsedArg.getResult());
-                                    MEEP_ARGS.put(str, pa);
-                                });
-                                return argumentCommandNode.listSuggestions(new CommandContext<>(
-                                        getSender(stack),
-                                        context.getInput(),
-                                        MEEP_ARGS,
-                                        (ctx) -> context.getCommand().run(context),
-                                        null,
-                                        null,
-                                        context.getRange(),
-                                        null,
-                                        null,
-                                        context.isForked()
-                                ), builder);
-                            } catch (Exception ignored) {}
+            case ArgumentCommandNode<CommandSender, ?> argumentCommandNode -> {
+                ArgumentType<?> argType;
+                if (argumentCommandNode.getType() instanceof IntegerArgumentType integerArgumentType) {
+                    argType = integerArgumentType;
+                } else if (argumentCommandNode.getType() instanceof BoolArgumentType boolArgumentType) {
+                    argType = boolArgumentType;
+                } else if (argumentCommandNode.getType() instanceof DoubleArgumentType doubleArgumentType) {
+                    argType = doubleArgumentType;
+                } else if (argumentCommandNode.getType() instanceof FloatArgumentType floatArgumentType) {
+                    argType = floatArgumentType;
+                } else if (argumentCommandNode.getType() instanceof LongArgumentType longArgumentType) {
+                    argType = longArgumentType;
+                } else if (argumentCommandNode.getType() instanceof StringArgumentType stringArgumentType) {
+                    argType = stringArgumentType;
+                } else {
+                    argType = new CustomArgumentType<Object, String>() {
+                        @Override
+                        public @NotNull Object parse(@NotNull StringReader stringReader) {
+                            return new Object(); // This doesn't matter because we parse the command straight to Meep's dispatcher which will handle the parsing much better than paper could ever
                         }
-                        return Suggestions.empty();
-                    }
-                };
-            }
-            RequiredArgumentBuilder<CommandSourceStack, ?> argument = Commands.argument(argumentCommandNode.getName(), argType);
-            argument.executes(commandContext -> {
-                CommandSender sender = getSender(commandContext.getSource());
-                if (sender == null) {
-                    throw new CommandSyntaxException(new CommandExceptionType() {}, () -> "Unsupported CommandSender type for Meep.");
+
+                        @Override
+                        public @NotNull ArgumentType<String> getNativeType() {
+                            return StringArgumentType.word();
+                        }
+
+                        @Override
+                        public @NotNull <S> CompletableFuture<Suggestions> listSuggestions(@NotNull CommandContext<S> context, @NotNull SuggestionsBuilder builder) {
+                            if (context.getSource() instanceof CommandSourceStack stack) {
+                                try {
+                                    Map<String, ParsedArgument<CommandSender, ?>> MEEP_ARGS = new HashMap<>();
+                                    @SuppressWarnings("unchecked")
+                                    Map<String, ParsedArgument<CommandSourceStack, ?>> ARGS = (Map<String, ParsedArgument<CommandSourceStack, ?>>) context.getClass().getDeclaredField("arguments").get(context);
+                                    ARGS.forEach((str, parsedArg) -> {
+                                        ParsedArgument<CommandSender, ?> pa = new ParsedArgument<>(parsedArg.getRange().getStart(), parsedArg.getRange().getEnd(), parsedArg.getResult());
+                                        MEEP_ARGS.put(str, pa);
+                                    });
+                                    return argumentCommandNode.listSuggestions(new CommandContext<>(
+                                            getSender(stack),
+                                            context.getInput(),
+                                            MEEP_ARGS,
+                                            (ctx) -> context.getCommand().run(context),
+                                            root,
+                                            null,
+                                            context.getRange(),
+                                            null,
+                                            null,
+                                            context.isForked()
+                                    ), builder);
+                                } catch (Exception ignored) {
+                                }
+                            }
+                            return Suggestions.empty();
+                        }
+                    };
                 }
-                return DISPATCHER.execute(commandContext.getInput(), sender);
-            });
-            for (CommandNode<CommandSender> command : argumentCommandNode.getChildren()) {
-                argument = argument.then(translateNode(command));
+                RequiredArgumentBuilder<CommandSourceStack, ?> argument = Commands.argument(argumentCommandNode.getName(), argType);
+                argument.executes(commandContext -> {
+                    CommandSender sender = getSender(commandContext.getSource());
+                    if (sender == null) {
+                        throw new CommandSyntaxException(new CommandExceptionType() {
+                        }, () -> "Unsupported CommandSender type for Meep.");
+                    }
+                    return DISPATCHER.execute(commandContext.getInput(), sender);
+                });
+                for (CommandNode<CommandSender> command : argumentCommandNode.getChildren()) {
+                    argument = argument.then(translateNode(command, DISPATCHER.getRoot()));
+                }
+                CommandNode<CommandSender> redirect = argumentCommandNode.getRedirect();
+                boolean isForking = argumentCommandNode.isFork();
+                if (redirect != null) {
+                    argument = argument.forward(translateNode(redirect, DISPATCHER.getRoot()), null, isForking); // Modifier can be null because we once again handle this on the other dispatcher
+                }
+                return argument.build();
             }
-            CommandNode<CommandSender> redirect = argumentCommandNode.getRedirect();
-            boolean isForking = argumentCommandNode.isFork();
-            if (redirect != null) {
-                argument = argument.forward(translateNode(redirect), null, isForking); // Modifier can be null because we once again handle this on the other dispatcher
-            }
-            return argument.build();
-        } else if (original instanceof RootCommandNode<CommandSender>) {
-            throw new RuntimeException("Cannot translate RootCommandNode.");
-        } else {
-            throw new RuntimeException("Unknown CommandNode.");
+            case RootCommandNode<CommandSender> ignored ->
+                    throw new RuntimeException("Cannot translate RootCommandNode.");
+            case null, default -> throw new RuntimeException("Unknown CommandNode.");
         }
     }
 
@@ -238,246 +240,252 @@ public final class MeepPaper extends JavaPlugin implements Listener {
     }
 
     public org.bukkit.command.CommandSender getSender(CommandSender sender) {
-        if (sender instanceof net.kore.meep.paper.entity.Entity e) {
-            return e.getParent();
-        } else if (sender instanceof CommandBlockSender block) {
-            World w = ((net.kore.meep.paper.world.World)block.getBlock().getWorldPosition().getWorld()).getParent();
-            Coordinates coords = block.getBlock().getWorldPosition().getCoordinates();
-            Block bl = w.getBlockAt(new Location(w, coords.getX(), coords.getY(), coords.getZ()));
-            return new BlockCommandSender() {
-                @Override
-                public @NotNull Block getBlock() {
-                    return bl;
-                }
+        switch (sender) {
+            case net.kore.meep.paper.entity.Entity e -> {
+                return e.getParent();
+            }
+            case CommandBlockSender block -> {
+                World w = ((net.kore.meep.paper.world.World) block.getBlock().getWorldPosition().getWorld()).getParent();
+                Coordinates coords = block.getBlock().getWorldPosition().getCoordinates();
+                Block bl = w.getBlockAt(new Location(w, coords.getX(), coords.getY(), coords.getZ()));
+                return new BlockCommandSender() {
+                    @Override
+                    public @NotNull Block getBlock() {
+                        return bl;
+                    }
 
-                @Override
-                public void sendMessage(@NotNull String s) {
+                    @Override
+                    public void sendMessage(@NotNull String s) {
 
-                }
+                    }
 
-                @Override
-                public void sendMessage(@NotNull String... strings) {
+                    @Override
+                    public void sendMessage(@NotNull String... strings) {
 
-                }
+                    }
 
-                @Override
-                public void sendMessage(@Nullable UUID uuid, @NotNull String s) {
+                    @Override
+                    public void sendMessage(@Nullable UUID uuid, @NotNull String s) {
 
-                }
+                    }
 
-                @Override
-                public void sendMessage(@Nullable UUID uuid, @NotNull String... strings) {
+                    @Override
+                    public void sendMessage(@Nullable UUID uuid, @NotNull String... strings) {
 
-                }
+                    }
 
-                @Override
-                public @NotNull Server getServer() {
-                    return Bukkit.getServer();
-                }
+                    @Override
+                    public @NotNull Server getServer() {
+                        return Bukkit.getServer();
+                    }
 
-                @Override
-                public @NotNull String getName() {
-                    return "";
-                }
+                    @Override
+                    public @NotNull String getName() {
+                        return "";
+                    }
 
-                @NotNull
-                @Override
-                public Spigot spigot() {
-                    return new Spigot();
-                }
+                    @NotNull
+                    @Override
+                    public Spigot spigot() {
+                        return new Spigot();
+                    }
 
-                @Override
-                public @NotNull Component name() {
-                    return Component.text("Unknown Name.");
-                }
+                    @Override
+                    public @NotNull Component name() {
+                        return Component.text("Unknown Name.");
+                    }
 
-                @Override
-                public boolean isPermissionSet(@NotNull String s) {
-                    return true;
-                }
+                    @Override
+                    public boolean isPermissionSet(@NotNull String s) {
+                        return true;
+                    }
 
-                @Override
-                public boolean isPermissionSet(@NotNull Permission permission) {
-                    return true;
-                }
+                    @Override
+                    public boolean isPermissionSet(@NotNull Permission permission) {
+                        return true;
+                    }
 
-                @Override
-                public boolean hasPermission(@NotNull String s) {
-                    return true;
-                }
+                    @Override
+                    public boolean hasPermission(@NotNull String s) {
+                        return true;
+                    }
 
-                @Override
-                public boolean hasPermission(@NotNull Permission permission) {
-                    return true;
-                }
+                    @Override
+                    public boolean hasPermission(@NotNull Permission permission) {
+                        return true;
+                    }
 
-                @Override
-                public @NotNull PermissionAttachment addAttachment(@NotNull Plugin plugin, @NotNull String s, boolean b) {
-                    return new PermissionAttachment(plugin, this);
-                }
+                    @Override
+                    public @NotNull PermissionAttachment addAttachment(@NotNull Plugin plugin, @NotNull String s, boolean b) {
+                        return new PermissionAttachment(plugin, this);
+                    }
 
-                @Override
-                public @NotNull PermissionAttachment addAttachment(@NotNull Plugin plugin) {
-                    return new PermissionAttachment(plugin, this);
-                }
+                    @Override
+                    public @NotNull PermissionAttachment addAttachment(@NotNull Plugin plugin) {
+                        return new PermissionAttachment(plugin, this);
+                    }
 
-                @Override
-                public @Nullable PermissionAttachment addAttachment(@NotNull Plugin plugin, @NotNull String s, boolean b, int i) {
-                    return new PermissionAttachment(plugin, this);
-                }
+                    @Override
+                    public @NotNull PermissionAttachment addAttachment(@NotNull Plugin plugin, @NotNull String s, boolean b, int i) {
+                        return new PermissionAttachment(plugin, this);
+                    }
 
-                @Override
-                public @Nullable PermissionAttachment addAttachment(@NotNull Plugin plugin, int i) {
-                    return new PermissionAttachment(plugin, this);
-                }
+                    @Override
+                    public @NotNull PermissionAttachment addAttachment(@NotNull Plugin plugin, int i) {
+                        return new PermissionAttachment(plugin, this);
+                    }
 
-                @Override
-                public void removeAttachment(@NotNull PermissionAttachment permissionAttachment) {
+                    @Override
+                    public void removeAttachment(@NotNull PermissionAttachment permissionAttachment) {
 
-                }
+                    }
 
-                @Override
-                public void recalculatePermissions() {
+                    @Override
+                    public void recalculatePermissions() {
 
-                }
+                    }
 
-                @Override
-                public @NotNull Set<PermissionAttachmentInfo> getEffectivePermissions() {
-                    return new HashSet<>();
-                }
+                    @Override
+                    public @NotNull Set<PermissionAttachmentInfo> getEffectivePermissions() {
+                        return new HashSet<>();
+                    }
 
-                @Override
-                public boolean isOp() {
-                    return true;
-                }
+                    @Override
+                    public boolean isOp() {
+                        return true;
+                    }
 
-                @Override
-                public void setOp(boolean b) {
+                    @Override
+                    public void setOp(boolean b) {
 
-                }
-            };
-        } else if (sender instanceof CommandProxySender proxy) {
-            return new ProxiedCommandSender() {
-                @Override
-                public org.bukkit.command.@NotNull CommandSender getCaller() {
-                    return getSender(proxy.caller());
-                }
+                    }
+                };
+            }
+            case CommandProxySender proxy -> {
+                return new ProxiedCommandSender() {
+                    @Override
+                    public org.bukkit.command.@NotNull CommandSender getCaller() {
+                        return Objects.requireNonNull(getSender(proxy.caller()));
+                    }
 
-                @Override
-                public org.bukkit.command.@NotNull CommandSender getCallee() {
-                    return getSender(proxy.callee());
-                }
+                    @Override
+                    public org.bukkit.command.@NotNull CommandSender getCallee() {
+                        return Objects.requireNonNull(getSender(proxy.callee()));
+                    }
 
-                @Override
-                public void sendMessage(@NotNull String s) {
+                    @Override
+                    public void sendMessage(@NotNull String s) {
 
-                }
+                    }
 
-                @Override
-                public void sendMessage(@NotNull String... strings) {
+                    @Override
+                    public void sendMessage(@NotNull String... strings) {
 
-                }
+                    }
 
-                @Override
-                public void sendMessage(@Nullable UUID uuid, @NotNull String s) {
+                    @Override
+                    public void sendMessage(@Nullable UUID uuid, @NotNull String s) {
 
-                }
+                    }
 
-                @Override
-                public void sendMessage(@Nullable UUID uuid, @NotNull String... strings) {
+                    @Override
+                    public void sendMessage(@Nullable UUID uuid, @NotNull String... strings) {
 
-                }
+                    }
 
-                @Override
-                public @NotNull Server getServer() {
-                    return Bukkit.getServer();
-                }
+                    @Override
+                    public @NotNull Server getServer() {
+                        return Bukkit.getServer();
+                    }
 
-                @Override
-                public @NotNull String getName() {
-                    return "";
-                }
+                    @Override
+                    public @NotNull String getName() {
+                        return "";
+                    }
 
-                @NotNull
-                @Override
-                public Spigot spigot() {
-                    return new Spigot();
-                }
+                    @NotNull
+                    @Override
+                    public Spigot spigot() {
+                        return new Spigot();
+                    }
 
-                @Override
-                public @NotNull Component name() {
-                    return Component.text("Unknown Name.");
-                }
+                    @Override
+                    public @NotNull Component name() {
+                        return Component.text("Unknown Name.");
+                    }
 
-                @Override
-                public boolean isPermissionSet(@NotNull String s) {
-                    return hasPermission(s);
-                }
+                    @Override
+                    public boolean isPermissionSet(@NotNull String s) {
+                        return hasPermission(s);
+                    }
 
-                @Override
-                public boolean isPermissionSet(@NotNull Permission permission) {
-                    return hasPermission(permission);
-                }
+                    @Override
+                    public boolean isPermissionSet(@NotNull Permission permission) {
+                        return hasPermission(permission);
+                    }
 
-                @Override
-                public boolean hasPermission(@NotNull String s) {
-                    return getCallee().hasPermission(s);
-                }
+                    @Override
+                    public boolean hasPermission(@NotNull String s) {
+                        return getCallee().hasPermission(s);
+                    }
 
-                @Override
-                public boolean hasPermission(@NotNull Permission permission) {
-                    return getCallee().hasPermission(permission);
-                }
+                    @Override
+                    public boolean hasPermission(@NotNull Permission permission) {
+                        return getCallee().hasPermission(permission);
+                    }
 
-                @Override
-                public @NotNull PermissionAttachment addAttachment(@NotNull Plugin plugin, @NotNull String s, boolean b) {
-                    return new PermissionAttachment(plugin, this);
-                }
+                    @Override
+                    public @NotNull PermissionAttachment addAttachment(@NotNull Plugin plugin, @NotNull String s, boolean b) {
+                        return new PermissionAttachment(plugin, this);
+                    }
 
-                @Override
-                public @NotNull PermissionAttachment addAttachment(@NotNull Plugin plugin) {
-                    return new PermissionAttachment(plugin, this);
-                }
+                    @Override
+                    public @NotNull PermissionAttachment addAttachment(@NotNull Plugin plugin) {
+                        return new PermissionAttachment(plugin, this);
+                    }
 
-                @Override
-                public @Nullable PermissionAttachment addAttachment(@NotNull Plugin plugin, @NotNull String s, boolean b, int i) {
-                    return null;
-                }
+                    @Override
+                    public @Nullable PermissionAttachment addAttachment(@NotNull Plugin plugin, @NotNull String s, boolean b, int i) {
+                        return null;
+                    }
 
-                @Override
-                public @Nullable PermissionAttachment addAttachment(@NotNull Plugin plugin, int i) {
-                    return null;
-                }
+                    @Override
+                    public @Nullable PermissionAttachment addAttachment(@NotNull Plugin plugin, int i) {
+                        return null;
+                    }
 
-                @Override
-                public void removeAttachment(@NotNull PermissionAttachment permissionAttachment) {
+                    @Override
+                    public void removeAttachment(@NotNull PermissionAttachment permissionAttachment) {
 
-                }
+                    }
 
-                @Override
-                public void recalculatePermissions() {
+                    @Override
+                    public void recalculatePermissions() {
 
-                }
+                    }
 
-                @Override
-                public @NotNull Set<PermissionAttachmentInfo> getEffectivePermissions() {
-                    return Set.of();
-                }
+                    @Override
+                    public @NotNull Set<PermissionAttachmentInfo> getEffectivePermissions() {
+                        return Set.of();
+                    }
 
-                @Override
-                public boolean isOp() {
-                    return getCallee().isOp();
-                }
+                    @Override
+                    public boolean isOp() {
+                        return getCallee().isOp();
+                    }
 
-                @Override
-                public void setOp(boolean b) {
-                    getCallee().setOp(b);
-                }
-            };
-        } else if (sender instanceof Console console) {
-            return Bukkit.getConsoleSender();
-        } else {
-            return null;
+                    @Override
+                    public void setOp(boolean b) {
+                        getCallee().setOp(b);
+                    }
+                };
+            }
+            case Console ignored -> {
+                return Bukkit.getConsoleSender();
+            }
+            case null, default -> {
+                return null;
+            }
         }
     }
 }
