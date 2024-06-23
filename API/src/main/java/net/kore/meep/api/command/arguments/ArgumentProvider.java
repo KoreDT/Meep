@@ -104,14 +104,6 @@ public class ArgumentProvider {
     }
 
     /**
-     * Get a enchant argument type
-     * @return {@link ArgumentType}<{@link NamespaceKey}>
-     */
-    public static ArgumentType<NamespaceKey> enchant() {
-        return KeyArgumentType.enchant();
-    }
-
-    /**
      * Get a position argument type but it allows a Player as an input
      * @return {@link ArgumentType}<{@link Coordinates}>
      */

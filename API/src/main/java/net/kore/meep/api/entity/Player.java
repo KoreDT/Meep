@@ -5,8 +5,6 @@
 
 package net.kore.meep.api.entity;
 
-import net.kore.meep.api.command.CommandSender;
-import net.kore.meep.api.permission.Permissible;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
@@ -65,4 +63,11 @@ public interface Player extends Entity, Identity {
      * @return boolean
      */
     boolean isSprinting();
+
+    /**
+     * Send a custom packet to the player
+     * @param channel The channel to send the packet on
+     * @param data The data of the packet
+     */
+    void sendPacket(String channel, byte[] data);
 }

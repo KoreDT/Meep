@@ -12,16 +12,21 @@ import net.kore.meep.api.NamespaceKey;
 import net.kore.meep.api.WhitelistManager;
 import net.kore.meep.api.command.MeepCommandUtils;
 import net.kore.meep.api.entity.Player;
+import net.kore.meep.api.packets.PacketListener;
 import net.kore.meep.api.task.TaskSchedular;
 import net.kore.meep.api.world.World;
 import net.kore.meep.paper.task.PaperAsyncTaskSchedular;
 import net.kore.meep.paper.task.PaperTaskSchedular;
+import net.kore.meep.paper.utils.BukkitToMeep;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.plugin.messaging.PluginMessageListener;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -158,5 +163,15 @@ public class PaperyMeep extends Meep {
     @Override
     public MeepCommandUtils getCommandUtils() {
         return commandUtils;
+    }
+
+    @Override
+    public void registerIncomingPackets(String channel, PacketListener packetListener) {
+        Bukkit.getMessenger().registerIncomingPluginChannel(MeepPaper.getPlugin(), channel, (s, player, bytes) -> packetListener.onPacket(BukkitToMeep.player(player), s, bytes));
+    }
+
+    @Override
+    public void registerOutgoingPackets(String channel) {
+        Bukkit.getMessenger().registerOutgoingPluginChannel(MeepPaper.getPlugin(), channel);
     }
 }

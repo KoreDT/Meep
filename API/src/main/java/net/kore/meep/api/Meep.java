@@ -28,6 +28,7 @@ import net.kore.meep.api.event.world.WorldUnloadEvent;
 import net.kore.meep.api.logger.Logger;
 import net.kore.meep.api.entity.Player;
 import net.kore.meep.api.meepling.Meepling;
+import net.kore.meep.api.packets.PacketListener;
 import net.kore.meep.api.permission.Permission;
 import net.kore.meep.api.permission.PermissionManager;
 import net.kore.meep.api.meepling.loader.JSLoader;
@@ -353,4 +354,17 @@ public abstract class Meep {
      * @return {@link MeepCommandUtils}
      */
     public abstract MeepCommandUtils getCommandUtils();
+
+    /**
+     * Register a packet that you want to recieve
+     * @param channel The channel to listen on
+     * @param packetListener The handler of the packet
+     */
+    public abstract void registerIncomingPackets(String channel, PacketListener packetListener);
+
+    /**
+     * Register a packet that you will send
+     * @param channel The channel to send the packet on
+     */
+    public abstract void registerOutgoingPackets(String channel);
 }

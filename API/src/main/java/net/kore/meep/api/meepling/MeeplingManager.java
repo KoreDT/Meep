@@ -39,7 +39,7 @@ public class MeeplingManager {
      * @param name The name of the Meepling
      * @return boolean
      */
-    public boolean isMeeplingUsable(String name) {
+    public boolean isMeeplingRegistered(String name) {
         return meeplingMap.get(name) != null;
     }
 
@@ -48,7 +48,7 @@ public class MeeplingManager {
      * @param clazz The class of the Meepling
      * @return boolean
      */
-    public boolean isMeeplingUsable(Class<? extends Meepling> clazz) {
+    public boolean isMeeplingRegistered(Class<? extends Meepling> clazz) {
         return clazzMap.get(clazz) != null;
     }
 

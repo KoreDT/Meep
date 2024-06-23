@@ -1,15 +1,18 @@
 package net.kore.meep.fabric.world;
 
+import net.kore.meep.api.NamespaceKey;
 import net.kore.meep.api.block.Block;
 import net.kore.meep.api.positioning.Coordinates;
 import net.kore.meep.api.world.Chunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class World implements net.kore.meep.api.world.World {
@@ -69,5 +72,11 @@ public class World implements net.kore.meep.api.world.World {
     @Override
     public Chunk getChunk(int x, int z) {
         return new net.kore.meep.fabric.world.Chunk(parent.getChunk(x, z));
+    }
+
+    @Override
+    public NamespaceKey getKey() {
+        ResourceLocation levelResourceKey = parent.dimension().registry();
+        return new NamespaceKey(levelResourceKey.getNamespace(), levelResourceKey.getPath());
     }
 }
