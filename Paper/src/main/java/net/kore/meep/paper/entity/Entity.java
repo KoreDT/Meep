@@ -55,7 +55,7 @@ public class Entity implements net.kore.meep.api.entity.Entity, AllPermissiveCom
 
     @Override
     public void setPosition(WorldPosition position) {
-        parent.teleport(new Location( ((World)position.getWorld()).getParent(), position.getPosition().getX(), position.getPosition().getY(), position.getPosition().getZ()));
+        parent.teleport(new Location( ((World)position.getWorld()).getParent(), position.getCoordinates().getX(), position.getCoordinates().getY(), position.getCoordinates().getZ()));
     }
 
     @Override
@@ -85,7 +85,7 @@ public class Entity implements net.kore.meep.api.entity.Entity, AllPermissiveCom
 
     @Override
     public void teleport(WorldPosition position, Angle angle) {
-        parent.teleport(new Location( ((World)position.getWorld()).getParent(), position.getPosition().getX(), position.getPosition().getY(), position.getPosition().getZ(), (float) angle.getYaw(), (float) angle.getPitch()));
+        parent.teleport(new Location( ((World)position.getWorld()).getParent(), position.getCoordinates().getX(), position.getCoordinates().getY(), position.getCoordinates().getZ(), (float) angle.getYaw(), (float) angle.getPitch()));
     }
 
     @Override

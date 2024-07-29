@@ -16,7 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 public class MeepToBukkit {
     public static Enchantment enchantment(Enchant enchant) {
         try {
-            Object obj = Enchantment.class.getDeclaredMethod("getEnchantment", String.class).invoke(null, enchant.key().getPath());
+            Object obj = Enchantment.class.getDeclaredMethod("getEnchantment", String.class).invoke(null, enchant.getKey().getPath());
             if (obj instanceof Enchantment e) {
                 return e;
             }
