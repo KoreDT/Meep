@@ -1,0 +1,13 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Meepling Formatter Schema",
+	"type": "object",
+	"properties": {
+		"main": {
+			"type": "string"
+		}
+	},
+	"required": [
+		"name"
+	]
+}

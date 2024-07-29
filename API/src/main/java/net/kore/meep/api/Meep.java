@@ -367,4 +367,10 @@ public abstract class Meep {
      * @param channel The channel to send the packet on
      */
     public abstract void registerOutgoingPackets(String channel);
+
+    /**
+     * Get the TPS of the server
+     * @return int
+     */
+    public abstract int getTPS();
 }

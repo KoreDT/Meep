@@ -1,0 +1,10 @@
+{
+	"name": "Meep Things",
+	"description": "A Meepling to add many cool commands and utils",
+	"main": "net.kore.meep.things.Things",
+	"version": "1.0-SNAPSHOT",
+
+	"meep": {
+		"version": "1.0-SNAPSHOT"
+	}
+}

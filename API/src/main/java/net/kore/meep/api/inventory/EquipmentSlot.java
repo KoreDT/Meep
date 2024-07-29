@@ -8,19 +8,16 @@ package net.kore.meep.api.inventory;
 public enum EquipmentSlot {
     HAND,
     OFF_HAND,
-    BOOTS,
-    LEGGINGS,
+    HELMET,
     CHESTPLATE,
-    HELMET;
+    LEGGINGS,
+    BOOTS;
 
-    EquipmentSlot() {
-    }
-
-    public boolean isHand() {
+    public boolean hand() {
         return this == HAND || this == OFF_HAND;
     }
 
-    public boolean isArmor() {
+    public boolean armor() {
         return this == HELMET || this == CHESTPLATE || this == LEGGINGS || this == BOOTS;
     }
 }

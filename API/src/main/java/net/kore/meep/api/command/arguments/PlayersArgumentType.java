@@ -47,14 +47,15 @@ public class PlayersArgumentType implements ArgumentType<List<Player>> {
         if (!players.isEmpty()) {
             return players;
         } else {
-            throw CommandUtils.createException("No player found.");
+            throw CommandUtils.createException("No players found.");
         }
     }
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
         String fullInput = builder.getRemaining();
-        String input = Arrays.stream(fullInput.split(",")).toList().getLast();
+        List<String> last = Arrays.stream(fullInput.split(",")).toList();
+        String input = last.get(last.size() - 1);
         for (Player p : Collections.unmodifiableList(Meep.get().getOnlinePlayers())) {
             if (p.getName().startsWith(input)) {
                 builder.suggest(fullInput + p.getName().substring(input.length()));

@@ -20,7 +20,7 @@ import net.kyori.adventure.text.format.TextColor;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-public class NamedColorArgumentType implements ArgumentType<NamedTextColor> {
+public class 1NamedColorArgumentType implements ArgumentType<NamedTextColor> {
     private final Map<String, NamedTextColor> suggestables = new HashMap<>();
 
     protected NamedColorArgumentType() {

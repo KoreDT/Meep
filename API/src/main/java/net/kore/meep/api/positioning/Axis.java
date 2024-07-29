@@ -6,5 +6,5 @@
 package net.kore.meep.api.positioning;
 
 public enum Axis {
-    X, Y, Z;
+    X, Y, Z
 }

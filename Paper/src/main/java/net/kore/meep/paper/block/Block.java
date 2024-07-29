@@ -7,12 +7,13 @@ package net.kore.meep.paper.block;
 
 import net.kore.meep.api.NamespaceKey;
 import net.kore.meep.api.block.BlockDirection;
+import net.kore.meep.api.positioning.Coordinates;
 import net.kore.meep.api.positioning.WorldPosition;
 import net.kore.meep.paper.world.World;
 import org.bukkit.block.BlockFace;
 
 public class Block implements net.kore.meep.api.block.Block {
-    private org.bukkit.block.Block parent;
+    private final org.bukkit.block.Block parent;
 
     public Block(org.bukkit.block.Block parent) {
         this.parent = parent;
@@ -37,7 +38,7 @@ public class Block implements net.kore.meep.api.block.Block {
     }
 
     @Override
-    public WorldPosition getPosition() {
-        return new WorldPosition(new World(parent.getWorld()), parent.getX(), parent.getY(), parent.getZ());
+    public WorldPosition getWorldPosition() {
+        return new WorldPosition(new World(parent.getWorld()), new Coordinates(parent.getX(), parent.getY(), parent.getZ()));
     }
 }

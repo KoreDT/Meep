@@ -41,7 +41,7 @@ public class PositionArgumentType implements ArgumentType<Coordinates> {
     @CanReturnRelative
     public Coordinates parse(StringReader stringReader) throws CommandSyntaxException {
         int i = stringReader.getCursor();
-        if (stringReader.readStringUntil(' ').equals("player") && allowPlayer) {
+        if (allowPlayer && stringReader.readStringUntil(' ').equals("player")) {
             String playerName = stringReader.readUnquotedString();
             try {
                 UUID uuid = UUID.fromString(playerName);
@@ -70,7 +70,7 @@ public class PositionArgumentType implements ArgumentType<Coordinates> {
             return builder.suggest("player").buildFuture();
         } else {
             List<String> args = List.of(arg.split(" "));
-            if (args.getFirst().equals("player")) {
+            if (args.get(0).equals("player")) {
                 for (Player p : Meep.get().getOnlinePlayers()) {
                     if (p.getName().startsWith(builder.getRemaining())) {
                         builder.suggest("player " + p.getName());
@@ -90,15 +90,15 @@ public class PositionArgumentType implements ArgumentType<Coordinates> {
     public Coordinates parseRelative(StringReader reader) throws CommandSyntaxException {
         if (allowOnlyExact) throw ERROR_NO_EXACT_COORDS_ALLOWED.createWithContext(reader);
         int i = reader.getCursor();
-        Coordinates.RelativeData d = readRelativeDouble(reader, i);
+        Coordinates.RelativeData x = readRelativeDouble(reader, i);
         if (reader.canRead() && reader.peek() == ' ') {
             reader.skip();
-            Coordinates.RelativeData e = readRelativeDouble(reader, i);
+            Coordinates.RelativeData y = readRelativeDouble(reader, i);
             if (reader.canRead() && reader.peek() == ' ') {
                 reader.skip();
-                Coordinates.RelativeData f = readRelativeDouble(reader, i);
+                Coordinates.RelativeData z = readRelativeDouble(reader, i);
                 try {
-                    return new Coordinates(d, e, f);
+                    return new Coordinates(x, y, z);
                 } catch (IllegalArgumentException ex) {
                     throw ERROR_MIXED_TYPE.createWithContext(reader);
                 }
@@ -114,14 +114,14 @@ public class PositionArgumentType implements ArgumentType<Coordinates> {
 
     public Coordinates parseWorld(StringReader reader) throws CommandSyntaxException {
         int i = reader.getCursor();
-        double d = readWorldDouble(reader, i);
+        double x = readWorldDouble(reader, i);
         if (reader.canRead() && reader.peek() == ' ') {
             reader.skip();
-            double e = readWorldDouble(reader, i);
+            double y = readWorldDouble(reader, i);
             if (reader.canRead() && reader.peek() == ' ') {
                 reader.skip();
-                double f = readWorldDouble(reader, i);
-                return new Coordinates(d, e, f);
+                double z = readWorldDouble(reader, i);
+                return new Coordinates(x, y, z);
             } else {
                 reader.setCursor(i);
                 throw ERROR_NOT_COMPLETE.createWithContext(reader);

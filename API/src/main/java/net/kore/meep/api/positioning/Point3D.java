@@ -6,7 +6,6 @@
 package net.kore.meep.api.positioning;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class Point3D<T extends Point3D<T>> {
@@ -114,7 +113,7 @@ public abstract class Point3D<T extends Point3D<T>> {
     }
 
     @CanIgnoreReturnValue
-    public @NotNull T add(@NotNull T other) {
+    public @NotNull T add(@NotNull Point3D<?> other) {
         this.x += other.getX();
         this.y += other.getY();
         this.z += other.getZ();
@@ -122,7 +121,7 @@ public abstract class Point3D<T extends Point3D<T>> {
     }
 
     @CanIgnoreReturnValue
-    public @NotNull T subtract(@NotNull T other) {
+    public @NotNull T subtract(@NotNull Point3D<?> other) {
         this.x -= other.getX();
         this.y -= other.getY();
         this.z -= other.getZ();
@@ -130,7 +129,7 @@ public abstract class Point3D<T extends Point3D<T>> {
     }
 
     @CanIgnoreReturnValue
-    public @NotNull T multiply(@NotNull T other) {
+    public @NotNull T multiply(@NotNull Point3D<?> other) {
         this.x *= other.getX();
         this.y *= other.getY();
         this.z *= other.getZ();
@@ -138,7 +137,7 @@ public abstract class Point3D<T extends Point3D<T>> {
     }
 
     @CanIgnoreReturnValue
-    public @NotNull T divide(@NotNull T other) {
+    public @NotNull T divide(@NotNull Point3D<?> other) {
         this.x /= other.getX();
         this.y /= other.getY();
         this.z /= other.getZ();

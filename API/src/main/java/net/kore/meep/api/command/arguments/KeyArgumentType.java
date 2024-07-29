@@ -42,7 +42,7 @@ public class KeyArgumentType implements ArgumentType<NamespaceKey> {
     public NamespaceKey parse(StringReader reader) throws CommandSyntaxException {
         String strKey = reader.readUnquotedString();
         for (NamespaceKey key : keys) {
-            if (key.getNamespace().equals("minecraft")) {
+            if (Meep.get().getConfig().node("namespaces", "skip-namespace-behaviour").getBoolean(true) && key.getNamespace().equals("minecraft")) {
                 if (key.getFormatted().equals(strKey) || key.getPath().equals(strKey)) return key;
             } else {
                 if (key.getFormatted().equals(strKey)) return key;
@@ -56,7 +56,7 @@ public class KeyArgumentType implements ArgumentType<NamespaceKey> {
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
         String input = builder.getRemaining();
         for (NamespaceKey key : keys) {
-            if (key.getNamespace().equals("minecraft")) {
+            if (Meep.get().getConfig().node("namespaces", "skip-namespace-behaviour").getBoolean(true) && key.getNamespace().equals("minecraft")) {
                 if (key.getFormatted().startsWith(input) || key.getPath().startsWith(input)) {
                     builder.suggest(key.getFormatted());
                 }

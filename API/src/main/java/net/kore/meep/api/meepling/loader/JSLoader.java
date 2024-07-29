@@ -18,7 +18,7 @@ public class JSLoader implements Loader {
     public void loadFile(File parent) {
         try {
             File metadata = new File(parent, "meepling.json");
-            JsonObject jo = new JsonParser().parse(getString(new FileInputStream(metadata))).getAsJsonObject();
+            JsonObject jo = new JsonParser().parse(Loader.getString(new FileInputStream(metadata))).getAsJsonObject();
             executeString(new String(Files.readAllBytes(parent.toPath())), jo);
         } catch (IOException e) {
             throw new RuntimeException(e);

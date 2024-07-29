@@ -9,10 +9,5 @@ import net.kore.meep.api.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 
 public interface Hostile extends Agressible {
-    /**
-     * Get the target of the current entity
-     * @return {@link Entity}
-     */
-    @Override
-    @NotNull Entity getTarget();
+
 }

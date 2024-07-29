@@ -78,28 +78,28 @@ public abstract class IAngle<T extends IAngle<T>> {
     }
 
     @CanIgnoreReturnValue
-    public @NotNull T add(@NotNull T other) {
+    public @NotNull T add(@NotNull IAngle<?> other) {
         this.yaw += other.getYaw();
         this.pitch += other.getPitch();
         return getThis();
     }
 
     @CanIgnoreReturnValue
-    public @NotNull T subtract(@NotNull T other) {
+    public @NotNull T subtract(@NotNull IAngle<?> other) {
         this.yaw -= other.getYaw();
         this.pitch -= other.getPitch();
         return getThis();
     }
 
     @CanIgnoreReturnValue
-    public @NotNull T multiply(@NotNull T other) {
+    public @NotNull T multiply(@NotNull IAngle<?> other) {
         this.yaw *= other.getYaw();
         this.pitch *= other.getPitch();
         return getThis();
     }
 
     @CanIgnoreReturnValue
-    public @NotNull T divide(@NotNull T other) {
+    public @NotNull T divide(@NotNull IAngle<?> other) {
         this.yaw /= other.getYaw();
         this.pitch /= other.getPitch();
         return getThis();

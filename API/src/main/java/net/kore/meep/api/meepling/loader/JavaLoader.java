@@ -8,6 +8,8 @@ package net.kore.meep.api.meepling.loader;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.kore.meep.api.Meep;
+import net.kore.meep.api.format.Format;
+import net.kore.meep.api.format.Formatter;
 import net.kore.meep.api.meepling.Meepling;
 import net.kore.meep.api.meepling.Memepling;
 import net.kore.meep.api.meepling.MeeplingManager;
@@ -28,53 +30,101 @@ public class JavaLoader implements Loader {
     public void loadFile(File file) {
         try (JarFile jarFile = new JarFile(file)) {
             JarEntry meta = jarFile.getJarEntry("meepling.json");
-            InputStream is = jarFile.getInputStream(meta);
-            JsonObject jo = new JsonParser().parse(getString(is)).getAsJsonObject();
-            if (jo.get("name") == null || jo.get("main") == null || jo.get("version") == null) {
-                handleMeeplingErrorLoad("Could not load " + file.getName() + ", it is missing one or more of the required properties, 'name', 'main' or 'version'.");
-                return;
-            }
-            Enumeration<JarEntry> e = jarFile.entries();
+            if (meta != null) {
+                InputStream is = jarFile.getInputStream(meta);
+                JsonObject jo = new JsonParser().parse(Loader.getString(is)).getAsJsonObject();
+                if (jo.get("name") == null || jo.get("main") == null || jo.get("version") == null) {
+                    handleMeeplingErrorLoad("Could not load " + file.getName() + ", it is missing one or more of the required properties, 'name', 'main' or 'version'. It is a Meepling JAR");
+                    return;
+                }
+                Enumeration<JarEntry> e = jarFile.entries();
 
-            URL[] urls = {new URI("jar:file:" + file.getAbsolutePath() + "!/").toURL()};
+                URL[] urls = {new URI("jar:file:" + file.getAbsolutePath() + "!/").toURL()};
 
-            try (URLClassLoader cl = URLClassLoader.newInstance(urls, Thread.currentThread().getContextClassLoader())) {
-                Class<?> mainClass = null;
-                while (e.hasMoreElements()) {
-                    JarEntry je = e.nextElement();
-                    if (!je.getName().equals("meepling.json")) {
-                        if (je.isDirectory() || !je.getName().endsWith(".class")) continue;
-                        String className = je.getName().substring(0, je.getName().length() - 6);
-                        className = className.replace('/', '.');
-                        Class<?> c = cl.loadClass(className);
-                        if (className.equals(jo.get("main").getAsString())) {
-                            mainClass = c;
+                try (URLClassLoader cl = URLClassLoader.newInstance(urls, Thread.currentThread().getContextClassLoader())) {
+                    Class<?> mainClass = null;
+                    while (e.hasMoreElements()) {
+                        JarEntry je = e.nextElement();
+                        if (!je.getName().equals("meepling.json")) {
+                            if (je.isDirectory() || !je.getName().endsWith(".class")) continue;
+                            String className = je.getName().substring(0, je.getName().length() - 6);
+                            className = className.replace('/', '.');
+                            Class<?> c = cl.loadClass(className);
+                            if (className.equals(jo.get("main").getAsString())) {
+                                mainClass = c;
+                            }
                         }
                     }
-                }
 
-                if (mainClass == null) {
-                    handleMeeplingErrorLoad("Could not load " + jo.get("name").getAsString() + ", the main class could not be found.");
-                    return;
-                }
+                    if (mainClass == null) {
+                        handleMeeplingErrorLoad("Could not load " + jo.get("name").getAsString() + ", the main class could not be found. It is a Meepling JAR");
+                        return;
+                    }
 
-                if (!mainClass.isAssignableFrom(Meepling.class)) {
-                    handleMeeplingErrorLoad("Could not load " + jo.get("name").getAsString() + ", the main class doesn't extend Meepling.");
-                    return;
-                }
+                    if (!mainClass.isAssignableFrom(Meepling.class)) {
+                        handleMeeplingErrorLoad("Could not load " + jo.get("name").getAsString() + ", the main class doesn't extend Meepling.");
+                        return;
+                    }
 
-                @SuppressWarnings("unchecked") // Checked above
-                Constructor<Meepling> pluginConstructer = (Constructor<Meepling>) mainClass.getDeclaredConstructor();
-                Meepling pluginInstance = pluginConstructer.newInstance();
-                pluginInstance.setMetadata(jo);
-                if (pluginInstance.shouldUseDefaultConfig()) {
-                    pluginInstance.handleDefaultReload();
+                    @SuppressWarnings("unchecked") // Checked above
+                    Constructor<Meepling> pluginConstructer = (Constructor<Meepling>) mainClass.getDeclaredConstructor();
+                    Meepling pluginInstance = pluginConstructer.newInstance();
+                    pluginInstance.setMetadata(jo);
+                    if (pluginInstance.shouldUseDefaultConfig()) {
+                        pluginInstance.handleDefaultReload();
+                    }
+                    pluginInstance.init();
+                    if (Meep.get().getConfig().node("memeps.enabled").getBoolean(true) && pluginInstance instanceof Memepling memepling) {
+                        Meep.memeps.addAll(memepling.memeps());
+                    }
+                    MeeplingManager.get().registerMeepling(pluginInstance, jo.get("name").getAsString());
                 }
-                pluginInstance.init();
-                if (Meep.get().getConfig().node("memeps.enabled").getBoolean(true) && pluginInstance instanceof Memepling memepling) {
-                    Meep.memeps.addAll(memepling.memeps());
+            } else {
+                JarEntry formatterData = jarFile.getJarEntry("formatter.json");
+                if (formatterData != null) {
+                    InputStream is = jarFile.getInputStream(formatterData);
+                    JsonObject jo = new JsonParser().parse(Loader.getString(is)).getAsJsonObject();
+                    if (jo.get("main") == null) {
+                        Meep.getMasterLogger().error("Could not load " + file.getName() + ", it is missing the required property 'main'. It is a Formatter JAR");
+                        return;
+                    }
+
+                    Enumeration<JarEntry> e = jarFile.entries();
+
+                    URL[] urls = {new URI("jar:file:" + file.getAbsolutePath() + "!/").toURL()};
+
+                    try (URLClassLoader cl = URLClassLoader.newInstance(urls, Thread.currentThread().getContextClassLoader())) {
+                        Class<?> mainClass = null;
+                        while (e.hasMoreElements()) {
+                            JarEntry je = e.nextElement();
+                            if (!je.getName().equals("meepling.json")) {
+                                if (je.isDirectory() || !je.getName().endsWith(".class")) continue;
+                                String className = je.getName().substring(0, je.getName().length() - 6);
+                                className = className.replace('/', '.');
+                                Class<?> c = cl.loadClass(className);
+                                if (className.equals(jo.get("main").getAsString())) {
+                                    mainClass = c;
+                                }
+                            }
+                        }
+
+                        if (mainClass == null) {
+                            handleMeeplingErrorLoad("Could not load " + jo.get("name").getAsString() + ", the main class could not be found. It is a Formatter JAR");
+                            return;
+                        }
+
+                        if (!mainClass.isAssignableFrom(Formatter.class)) {
+                            handleMeeplingErrorLoad("Could not load " + jo.get("name").getAsString() + ", the main class doesn't extend Formatter.");
+                            return;
+                        }
+
+                        @SuppressWarnings("unchecked") // Checked above
+                        Constructor<Formatter> formatterConstructor = (Constructor<Formatter>) mainClass.getDeclaredConstructor();
+                        Formatter formatter = formatterConstructor.newInstance();
+
+                        Format.register(formatter);
+                    }
                 }
-                MeeplingManager.get().registerMeepling(pluginInstance, jo.get("name").getAsString());
             }
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException | IOException | ClassNotFoundException | URISyntaxException e) {
             handleMeeplingErrorLoad(e);

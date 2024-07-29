@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 public interface Loader {
     void loadFile(File file);
 
-    default String getString(InputStream is) {
+    static String getString(InputStream is) {
         try {
             return new String(is.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {

@@ -22,11 +22,8 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.plugin.messaging.PluginMessageListener;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -173,5 +170,10 @@ public class PaperyMeep extends Meep {
     @Override
     public void registerOutgoingPackets(String channel) {
         Bukkit.getMessenger().registerOutgoingPluginChannel(MeepPaper.getPlugin(), channel);
+    }
+
+    @Override
+    public int getTPS() {
+        return (int) MinecraftServer.getServer().tps1.getAverage();
     }
 }

@@ -17,6 +17,7 @@ import net.kore.meep.api.utils.CommandUtils;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class MeeplingArgumentType implements ArgumentType<Meepling> {
@@ -24,9 +25,9 @@ public class MeeplingArgumentType implements ArgumentType<Meepling> {
 
     @Override
     public Meepling parse(StringReader stringReader) throws CommandSyntaxException {
-        Meepling meepling = MeeplingManager.get().getMeepling(stringReader.readQuotedString());
-        if (meepling == null) throw CommandUtils.createException("No meepling found.");
-        return meepling;
+        Optional<Meepling> meepling = MeeplingManager.get().getMeepling(stringReader.readQuotedString());
+        if (meepling.isEmpty()) throw CommandUtils.createException("No meepling found.");
+        return meepling.get();
     }
 
     @Override

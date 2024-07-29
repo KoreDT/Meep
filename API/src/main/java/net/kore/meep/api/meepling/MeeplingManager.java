@@ -10,6 +10,7 @@ import org.jetbrains.annotations.ApiStatus;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class MeeplingManager {
     private static MeeplingManager INSTANCE;
@@ -57,8 +58,8 @@ public class MeeplingManager {
      * @param name The name of the Meepling
      * @return {@link Meepling}
      */
-    public Meepling getMeepling(String name) {
-        return meeplingMap.get(name);
+    public Optional<Meepling> getMeepling(String name) {
+        return Optional.ofNullable(meeplingMap.get(name));
     }
 
     /**
@@ -66,7 +67,7 @@ public class MeeplingManager {
      * @param clazz The class of the Meepling
      * @return {@link Meepling}
      */
-    public Meepling getMeepling(Class<? extends Meepling> clazz) {
+    public Optional<Meepling> getMeepling(Class<? extends Meepling> clazz) {
         return getMeepling(clazzMap.get(clazz));
     }
 }
