@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
 public class Chunk implements net.kore.meep.api.world.Chunk {
@@ -42,6 +43,26 @@ public class Chunk implements net.kore.meep.api.world.Chunk {
 
     @Override
     public void setPersistantString(@NotNull String path, String value) {
+
+    }
+
+    @Override
+    public @Nullable Integer getPersistantInteger(@NotNull String path) {
+        return 0;
+    }
+
+    @Override
+    public void setPersistantInteger(@NotNull String path, @Nullable Integer value) {
+
+    }
+
+    @Override
+    public @Nullable Boolean getPersistantBoolean(@NotNull String path) {
+        return null;
+    }
+
+    @Override
+    public void setPersistantBoolean(@NotNull String path, @Nullable Boolean value) {
 
     }
 }

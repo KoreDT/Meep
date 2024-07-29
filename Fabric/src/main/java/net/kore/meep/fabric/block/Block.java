@@ -30,11 +30,11 @@ public class Block implements net.kore.meep.api.block.Block {
             case UP -> new Coordinates(0, 1, 0);
             case DOWN -> new Coordinates(0, -1, 0);
         };
-        return ((WorldPosition) getPosition().add(coordinatesToAdd)).getBlock();
+        return new WorldPosition(getWorldPosition().getWorld(), coordinatesToAdd.add(getWorldPosition().getCoordinates())).getBlock();
     }
 
     @Override
-    public WorldPosition getPosition() {
+    public WorldPosition getWorldPosition() {
         return null;
     }
 }

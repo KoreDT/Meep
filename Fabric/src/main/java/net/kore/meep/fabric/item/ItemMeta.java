@@ -96,19 +96,20 @@ public class ItemMeta implements net.kore.meep.api.item.ItemMeta {
 
     @Override
     public boolean hasEnchant(@NotNull Enchant enchant) {
-        for (Holder<Enchantment> enchantments : parent.getEnchantments().keySet()) {
+        /*for (Holder<Enchantment> enchantments : parent.getEnchantments().keySet()) {
             ResourceLocation rl = BuiltInRegistries.ENCHANTMENT.getKey(enchantments.value());
             if (rl.getNamespace().equals(enchant.key().getNamespace()) && rl.getPath().equals(enchant.key().getPath())) {
                 return true;
             }
-        }
+        }*/
         return false;
     }
 
     @Override
     public int getEnchantLevel(@NotNull Enchant enchant) {
-        Enchantment e = BuiltInRegistries.ENCHANTMENT.get(new ResourceLocation(enchant.key().getNamespace(), enchant.key().getPath()));
-        return parent.getEnchantments().getLevel(e);
+        return 0;
+        //Enchantment e = BuiltInRegistries.ENCHANTMENT.get(new ResourceLocation(enchant.key().getNamespace(), enchant.key().getPath()));
+        //return parent.getEnchantments().getLevel(e);
     }
 
     @Override
@@ -123,7 +124,7 @@ public class ItemMeta implements net.kore.meep.api.item.ItemMeta {
 
     @Override
     public boolean addEnchant(@NotNull Enchant enchant, int level) {
-        parent.enchant(BuiltInRegistries.ENCHANTMENT.get(new ResourceLocation(enchant.key().getNamespace(), enchant.key().getPath())), level);
+        //parent.enchant(BuiltInRegistries.ENCHANTMENT.get(new ResourceLocation(enchant.key().getNamespace(), enchant.key().getPath())), level);
         return true;
     }
 
@@ -142,7 +143,8 @@ public class ItemMeta implements net.kore.meep.api.item.ItemMeta {
 
     @Override
     public boolean willEnchantConflict(@NotNull Enchant enchant) {
-        return !parent.canBeEnchantedWith(Holder.direct(BuiltInRegistries.ENCHANTMENT.get(new ResourceLocation(enchant.key().getNamespace(), enchant.key().getPath()))), EnchantingContext.PRIMARY);
+        return false;
+        //return !parent.canBeEnchantedWith(Holder.direct(BuiltInRegistries.ENCHANTMENT.get(new ResourceLocation(enchant.key().getNamespace(), enchant.key().getPath()))), EnchantingContext.PRIMARY);
     }
 
     @Override

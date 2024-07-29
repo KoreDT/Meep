@@ -4,10 +4,14 @@ import net.kore.meep.api.Console;
 import net.kore.meep.api.Meep;
 import net.kore.meep.api.NamespaceKey;
 import net.kore.meep.api.WhitelistManager;
+import net.kore.meep.api.command.MeepCommandUtils;
 import net.kore.meep.api.entity.Player;
+import net.kore.meep.api.packets.PacketListener;
+import net.kore.meep.api.task.TaskSchedular;
 import net.kore.meep.api.world.World;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +20,11 @@ import java.util.UUID;
 public class FabricyMeep extends Meep {
     private final FabricWhitelistManager manager = new FabricWhitelistManager();
     private final FabricConsole console = new FabricConsole();
+
+    @Override
+    public void executeCrash(@Nullable Throwable t, String message) {
+
+    }
 
     @Override
     public List<Player> getOnlinePlayers() {
@@ -33,7 +42,12 @@ public class FabricyMeep extends Meep {
     }
 
     @Override
-    public List<NamespaceKey> getUsableBlockKeys() {
+    public List<World> getWorlds() {
+        return List.of();
+    }
+
+    @Override
+    public List<NamespaceKey> getKnownBlockKeys() {
         List<NamespaceKey> blocks = new ArrayList<>();
         BuiltInRegistries.BLOCK.forEach(b -> {
             ResourceLocation rl = BuiltInRegistries.BLOCK.getKey(b);
@@ -43,7 +57,7 @@ public class FabricyMeep extends Meep {
     }
 
     @Override
-    public List<NamespaceKey> getUsableItemKeys() {
+    public List<NamespaceKey> getKnownItemKeys() {
         List<NamespaceKey> items = new ArrayList<>();
         BuiltInRegistries.ITEM.forEach(i -> {
             ResourceLocation rl = BuiltInRegistries.ITEM.getKey(i);
@@ -53,19 +67,22 @@ public class FabricyMeep extends Meep {
     }
 
     @Override
-    public List<NamespaceKey> getUsableEnchantKeys() {
-        List<NamespaceKey> enchants = new ArrayList<>();
-        BuiltInRegistries.ENCHANTMENT.forEach(e -> {
-            ResourceLocation rl = BuiltInRegistries.ENCHANTMENT.getKey(e);
-            if (rl != null) {
-                enchants.add(new NamespaceKey(rl.getNamespace(), rl.getPath(), NamespaceKey.KeyType.ENCHANT));
-            }
-        });
-        return enchants;
+    public List<NamespaceKey> getKnownParticleKeys() {
+        return List.of();
     }
 
     @Override
-    public List<NamespaceKey> getUsableEntityKeys() {
+    public List<NamespaceKey> getKnownVillagerTypeKeys() {
+        return List.of();
+    }
+
+    @Override
+    public List<NamespaceKey> getKnownVillagerProfessionKeys() {
+        return List.of();
+    }
+
+    @Override
+    public List<NamespaceKey> getKnownEntityKeys() {
         List<NamespaceKey> entities = new ArrayList<>();
         BuiltInRegistries.ENTITY_TYPE.forEach(e -> {
             ResourceLocation rl = BuiltInRegistries.ENTITY_TYPE.getKey(e);
@@ -82,5 +99,35 @@ public class FabricyMeep extends Meep {
     @Override
     public Console getConsole() {
         return console;
+    }
+
+    @Override
+    public TaskSchedular getSchedular() {
+        return null;
+    }
+
+    @Override
+    public TaskSchedular getAsyncSchedular() {
+        return null;
+    }
+
+    @Override
+    public MeepCommandUtils getCommandUtils() {
+        return null;
+    }
+
+    @Override
+    public void registerIncomingPackets(String channel, PacketListener packetListener) {
+
+    }
+
+    @Override
+    public void registerOutgoingPackets(String channel) {
+
+    }
+
+    @Override
+    public int getTPS() {
+        return 0;
     }
 }

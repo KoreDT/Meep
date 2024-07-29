@@ -66,6 +66,11 @@ public class Player extends Entity implements net.kore.meep.api.entity.Player {
     }
 
     @Override
+    public void sendPacket(String channel, byte[] data) {
+
+    }
+
+    @Override
     public java.util.@NotNull UUID uuid() {
         return getUUID();
     }
