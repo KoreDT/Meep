@@ -13,7 +13,7 @@ repositories {
 dependencies {
   if (!rootDir.absolutePath.endsWith("IDEAPlugin")) {
     implementation(project(path = ":API"))
-    compileOnly 'com.mojang:brigadier:1.0.18'
+    compileOnly('com.mojang:brigadier:1.0.18')
   }
 }
 
