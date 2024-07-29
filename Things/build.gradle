@@ -22,4 +22,9 @@ dependencies {
     compileOnly("org.apache.logging.log4j:log4j-api:2.23.1")
     compileOnly("org.spongepowered:configurate-hocon:4.1.2")
     compileOnly('com.mojang:brigadier:1.0.18')
+    compileOnly("org.graalvm.js:js:22.0.0")
+    compileOnly("org.graalvm.sdk:graal-sdk:22.0.0")
+    compileOnly("org.graalvm.truffle:truffle-api:22.0.0")
+    compileOnly('com.google.code.gson:gson:2.8.0')
+    compileOnly('com.google.guava:guava:33.2.0-jre')
 }
