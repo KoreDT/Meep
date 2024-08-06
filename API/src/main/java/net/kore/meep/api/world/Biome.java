@@ -30,6 +30,6 @@ public class Biome implements Keyable {
             return false;
         }
 
-        return biome.key.getFormatted().equals(key.getFormatted());
+        return biome.key.equals(key);
     }
 }

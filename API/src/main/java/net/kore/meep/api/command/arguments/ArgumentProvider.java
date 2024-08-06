@@ -8,7 +8,6 @@ package net.kore.meep.api.command.arguments;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
-import com.mojang.brigadier.context.CommandContext;
 import net.kore.meep.api.NamespaceKey;
 import net.kore.meep.api.color.DyeColor;
 import net.kore.meep.api.command.CommandSender;

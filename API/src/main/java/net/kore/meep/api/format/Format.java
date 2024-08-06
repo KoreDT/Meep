@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.kore.meep.api.Meep;
 import net.kore.meep.api.entity.Entity;
-import net.kore.meep.api.meepling.Meepling;
 import net.kore.meep.api.meepling.loader.Loader;
 import net.kore.meep.api.utils.ExceptionUtils;
 import net.kore.meep.api.world.World;

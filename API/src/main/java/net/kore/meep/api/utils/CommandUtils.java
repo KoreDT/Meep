@@ -18,41 +18,22 @@ import org.jetbrains.annotations.Nullable;
 
 public class CommandUtils {
     public static boolean canGetPosition(CommandSender sender) {
-        if (sender instanceof Entity || sender instanceof CommandBlockSender) {
-            return true;
-        } else if (sender instanceof CommandProxySender s) {
-            return canGetPosition(s.callee());
-        }
-        return false;
+        return getPosition(sender) != null;
     }
 
     @CannotReturnRelative
     public static @Nullable Coordinates getPosition(CommandSender sender) {
-        if (canGetPosition(sender)) {
-            if (sender instanceof Entity entity) return entity.getPosition().getCoordinates();
-            else if (sender instanceof CommandBlockSender block) return block.getBlock().getWorldPosition().getCoordinates();
-            else if (sender instanceof CommandProxySender proxy) return getPosition(proxy.callee());
-        }
+        if (sender instanceof Entity entity) return entity.getPosition().getCoordinates();
+        else if (sender instanceof CommandBlockSender block) return block.getBlock().getWorldPosition().getCoordinates();
+        else if (sender instanceof CommandProxySender proxy) return getPosition(proxy.callee());
         return null;
-    }
-
-    public static boolean canGetAngle(CommandSender sender) {
-        if (sender instanceof Entity || sender instanceof CommandBlockSender) {
-            return true;
-        } else if (sender instanceof CommandProxySender s) {
-            return canGetAngle(s.callee());
-        }
-        return false;
     }
 
     @CannotReturnRelative
-    public static @Nullable Angle getAngle(CommandSender sender) {
-        if (canGetAngle(sender)) {
-            if (sender instanceof Entity entity) return entity.getLookingAngle();
-            else if (sender instanceof CommandProxySender proxy) return getAngle(proxy.callee());
-            else return new Angle(0, 0);
-        }
-        return null;
+    public static Angle getAngle(CommandSender sender) {
+        if (sender instanceof Entity entity) return entity.getLookingAngle();
+        else if (sender instanceof CommandProxySender proxy) return getAngle(proxy.callee());
+        return new Angle(0, 0);
     }
 
     public static CommandSyntaxException createException(String message) {

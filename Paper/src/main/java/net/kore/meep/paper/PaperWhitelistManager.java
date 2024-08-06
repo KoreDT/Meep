@@ -36,12 +36,14 @@ public class PaperWhitelistManager implements WhitelistManager {
     @Override
     public void enable() {
         Bukkit.setWhitelistEnforced(true);
+        Bukkit.setWhitelist(true);
         EventManager.get().fireEvent(new WhitelistModifyEvent(this, null, WhitelistModifyEvent.Action.ENABLE));
     }
 
     @Override
     public void disable() {
         Bukkit.setWhitelistEnforced(false);
+        Bukkit.setWhitelist(false);
         EventManager.get().fireEvent(new WhitelistModifyEvent(this, null, WhitelistModifyEvent.Action.DISABLE));
     }
 
